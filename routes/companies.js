@@ -1,4 +1,5 @@
 const express = require("express");
+const slugify = require("slugify");
 const ExpressError = require("../ExpressError");
 const db = require("../db");
 const { jsonIncludes } = require("../helpers");
@@ -39,9 +40,9 @@ router.post("/", async (req, res, next) => {
             const queryString = `
             INSERT INTO companies (code, name, description)
             VALUES ($1, $2, $3) RETURNING code, name, description`;
-            const params = [req.body.code, req.body.name, req.body.description];
+            const params = [slugify(req.body.code), req.body.name, req.body.description];
             const results = await db.query(queryString, params);
-            return res.json({company: results.rows[0]});
+            return res.status(201).json({company: results.rows[0]});
         } else {
             throw new ExpressError("Please provide a json value with code, name, and description values", 400);
         }
@@ -82,7 +83,7 @@ router.delete("/:code", async (req, res, next) => {
         if (results.rows.length === 0) {
             throw new ExpressError(`company ${req.params.code} not found`, 404);
         }
-        return res.status(204).json({status: "deleted", data: results.rows[0]});
+        return res.status(202).json({status: "deleted", data: results.rows[0]});
     } catch (e) {
         next(e);
     }
